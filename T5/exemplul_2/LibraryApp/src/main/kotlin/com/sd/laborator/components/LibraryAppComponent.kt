@@ -3,6 +3,7 @@ package com.sd.laborator.components
 import com.sd.laborator.interfaces.LibraryDAO
 import com.sd.laborator.interfaces.LibraryPrinter
 import com.sd.laborator.model.Book
+import com.sd.laborator.model.Content
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,6 +44,7 @@ class LibraryAppComponent {
             val result: String? = when(function) {
                 "print" -> customPrint(parameter)
                 "find" -> customFind(parameter)
+                "add" -> customAdd(parameter)
                 else -> null
             }
             if (result != null) sendMessage(result)
@@ -69,6 +71,16 @@ class LibraryAppComponent {
             "publisher" -> this.libraryPrinter.printJSON(this.libraryDAO.findAllByPublisher(value))
             else -> "Not a valid field"
         }
+    }
+
+    fun customAdd(addParameter: String): String {
+        val parts = addParameter.split('&')
+        if (parts.size != 4)
+            return "FAIL"
+
+        val book = Book(Content(parts[0], parts[1], parts[2], parts[3]))
+
+        return if (addBook(book)) "SUCCESS" else "FAIL"
     }
 
     fun addBook(book: Book): Boolean {
