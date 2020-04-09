@@ -26,6 +26,8 @@ class Book(private var data: Content) {
             data.publisher = value
         }
 
+    // this is very bad too, why the f*** would class Content even exist,
+    // I'm not fixing this, whoever wrote this should be ashamed of himself
     var content: String?
         get() {
             return data.text
@@ -34,16 +36,17 @@ class Book(private var data: Content) {
             data.text = value
         }
 
+    // This is a very bad design, but ok
     fun hasAuthor(author: String): Boolean {
-        return data.author.equals(author)
+        return data.author!!.toLowerCase().indexOf(author) != -1
     }
 
     fun hasTitle(title: String): Boolean {
-        return data.name.equals(title)
+        return data.name!!.toLowerCase().indexOf(title) != -1
     }
 
     fun publishedBy(publisher: String): Boolean {
-        return data.publisher.equals(publisher)
+        return data.publisher!!.toLowerCase().indexOf(publisher) != -1
     }
 
 }

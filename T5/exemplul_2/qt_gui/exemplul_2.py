@@ -59,8 +59,10 @@ class LibraryApp(QWidget):
                                         options=options))
         if file_path:
             file_path = file_path.split("'")[1]
-            if not file_path.endswith('.json') and not file_path.endswith(
-                    '.html') and not file_path.endswith('.txt'):
+            _, ext = os.path.splitext(file_path)
+            if not ext == '.json'\
+                and not ext == '.html'\
+                    and not ext == '.txt':
                 if self.json_rb.isChecked():
                     file_path += '.json'
                 elif self.html_rb.isChecked():
@@ -68,8 +70,10 @@ class LibraryApp(QWidget):
                 else:
                     file_path += '.txt'
             try:
+                # Sa modific aici partea asta ar insemna sa stiu de dinainte format-ul pe care il primesc de la server,
+                # sau sa fac din nou o cerere cu formatul dorit, nici una din variante nu mi se pare ok
                 with open(file_path, 'w') as fp:
-                    if file_path.endswith(".html"):
+                    if ext == '.html':
                         fp.write(self.result.toHtml())
                     else:
                         fp.write(self.result.toPlainText())
