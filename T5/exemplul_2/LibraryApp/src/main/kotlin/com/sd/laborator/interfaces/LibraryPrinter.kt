@@ -1,3 +1,4 @@
 package com.sd.laborator.interfaces
 
-interface LibraryPrinter: HTMLPrinter, JSONPrinter, RawPrinter
+
+abstract class LibraryPrinter: HTMLPrinter, JSONPrinter, RawPrinter, XMLPrinter()

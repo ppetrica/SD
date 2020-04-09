@@ -128,6 +128,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QRadioButton" name="xml_rb">
+       <property name="text">
+        <string>XML</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">file_type_rb_btns</string>
+       </attribute>
+      </widget>
+     </item>
+     <item>
       <widget class="QRadioButton" name="text_rb">
        <property name="text">
         <string>Text</string>
@@ -164,7 +174,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="search_rb_btns"/>
   <buttongroup name="file_type_rb_btns"/>
+  <buttongroup name="search_rb_btns"/>
  </buttongroups>
 </ui>

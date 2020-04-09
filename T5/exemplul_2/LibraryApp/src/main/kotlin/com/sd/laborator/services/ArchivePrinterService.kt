@@ -20,11 +20,12 @@ fun toJSON(book: Book) =
     "    \"content\":\"${book.content}\"\n" +
     "}"
 
+
 @Service
-class ArchivePrinterService: LibraryPrinter {
+class ArchivePrinterService: LibraryPrinter() {
     override fun printHTML(books: Set<Book>): String {
         val header = "<html><head><title>Archive</title></head><body>"
-        val content = books.joinToString(transform=::toHTML);
+        val content = books.joinToString(transform=::toHTML)
         val footer = "</body></html>"
 
         return header + content + footer
@@ -32,7 +33,7 @@ class ArchivePrinterService: LibraryPrinter {
 
     override fun printJSON(books: Set<Book>): String {
         val header = "[\n"
-        val content = books.joinToString(transform=::toJSON, separator=",\n");
+        val content = books.joinToString(transform=::toJSON, separator=",\n")
         val footer = "\n]"
 
         return header + content + footer

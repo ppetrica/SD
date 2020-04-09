@@ -33,12 +33,13 @@ class LibraryApp(QWidget):
 
     def search(self):
         search_string = self.search_bar.text()
-        request = None
         if not search_string:
             if self.json_rb.isChecked():
                 request = 'print:json'
             elif self.html_rb.isChecked():
                 request = 'print:html'
+            elif self.xml_rb.isChecked():
+                request = 'print:xml'
             else:
                 request = 'print:raw'
         else:
@@ -61,12 +62,15 @@ class LibraryApp(QWidget):
             file_path = file_path.split("'")[1]
             _, ext = os.path.splitext(file_path)
             if not ext == '.json'\
-                and not ext == '.html'\
+                and not ext == '.html' \
+                    and not ext == '.xml' \
                     and not ext == '.txt':
                 if self.json_rb.isChecked():
                     file_path += '.json'
                 elif self.html_rb.isChecked():
                     file_path += '.html'
+                elif self.xml_rb.isChecked():
+                    file_path += '.xml'
                 else:
                     file_path += '.txt'
             try:

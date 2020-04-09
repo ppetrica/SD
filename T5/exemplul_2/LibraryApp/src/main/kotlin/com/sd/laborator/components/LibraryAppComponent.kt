@@ -55,6 +55,7 @@ class LibraryAppComponent {
         return when(format) {
             "html" -> libraryPrinter.printHTML(libraryDAO.getBooks())
             "json" -> libraryPrinter.printJSON(libraryDAO.getBooks())
+            "xml" -> libraryPrinter.printXML(libraryDAO.getBooks())
             "raw" -> libraryPrinter.printRaw(libraryDAO.getBooks())
             else -> "Not implemented"
         }
