@@ -1,6 +1,6 @@
 import os
 import sys
-from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog, QMessageBox, QDialog, QLineEdit
 from PyQt5 import QtCore
 from PyQt5.uic import loadUi
 from mq_communication import RabbitMq
@@ -13,16 +13,32 @@ def debug_trace(ui=None):
     # QtCore.pyqtRestoreInputHook()
 
 
-class LibraryApp(QWidget):
-    ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
+class BookDialog(QDialog):
+    def __init__(self):
+        QDialog.__init__(self)
+        loadUi(os.path.join(ROOT_DIR, 'popup.ui'), self)
+
+    def get_entries(self):
+        return self.author_input.text(),\
+                self.text_input.text(),\
+                self.name_input.text(),\
+                self.publisher_input.text()
+
+
+class LibraryApp(QWidget):
     def __init__(self):
         super(LibraryApp, self).__init__()
-        ui_path = os.path.join(self.ROOT_DIR, 'exemplul_2.ui')
+        ui_path = os.path.join(ROOT_DIR, 'exemplul_2.ui')
         loadUi(ui_path, self)
+        self.add_btn.clicked.connect(self.add)
         self.search_btn.clicked.connect(self.search)
         self.save_as_file_btn.clicked.connect(self.save_as_file)
         self.rabbit_mq = RabbitMq(self)
+        self._dialog = BookDialog()
+        self._dialog.accepted.connect(self.add_new_book)
 
     def set_response(self, response):
         self.result.setText(response)
@@ -85,6 +101,16 @@ class LibraryApp(QWidget):
                 print(e)
                 QMessageBox.warning(self, 'Exemplul 2',
                                     'Nu s-a putut salva fisierul')
+
+    def add(self):
+        self._dialog.show()
+
+    def add_new_book(self):
+        author, text, name, publisher = self._dialog.get_entries()
+        print(author)
+        print(text)
+        print(name)
+        print(publisher)
 
 
 if __name__ == '__main__':
