@@ -38,15 +38,15 @@ class Book(private var data: Content) {
 
     // This is a very bad design, but ok
     fun hasAuthor(author: String): Boolean {
-        return data.author!!.toLowerCase().indexOf(author) != -1
+        return data.author!!.toLowerCase().indexOf(author.toLowerCase()) != -1
     }
 
     fun hasTitle(title: String): Boolean {
-        return data.name!!.toLowerCase().indexOf(title) != -1
+        return data.name!!.toLowerCase().indexOf(title.toLowerCase()) != -1
     }
 
     fun publishedBy(publisher: String): Boolean {
-        return data.publisher!!.toLowerCase().indexOf(publisher) != -1
+        return data.publisher!!.toLowerCase().indexOf(publisher.toLowerCase()) != -1
     }
 
 }
