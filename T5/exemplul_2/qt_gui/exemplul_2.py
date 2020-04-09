@@ -29,6 +29,8 @@ class BookDialog(QDialog):
 
 
 class LibraryApp(QWidget):
+    _response_signal = QtCore.pyqtSignal(str)
+
     def __init__(self):
         super(LibraryApp, self).__init__()
         ui_path = os.path.join(ROOT_DIR, 'exemplul_2.ui')
@@ -36,16 +38,17 @@ class LibraryApp(QWidget):
         self.add_btn.clicked.connect(self.add)
         self.search_btn.clicked.connect(self.search)
         self.save_as_file_btn.clicked.connect(self.save_as_file)
-        self.rabbit_mq = RabbitMq(self)
+
+        self._response_signal.connect(self.on_response)
+        self.rabbit_mq = RabbitMq(self._response_signal)
         self._dialog = BookDialog()
         self._dialog.accepted.connect(self.add_new_book)
 
-    def set_response(self, response):
+    def on_response(self, response):
         self.result.setText(response)
 
     def send_request(self, request):
         self.rabbit_mq.send_message(message=request)
-        self.rabbit_mq.receive_message()
 
     def search(self):
         search_string = self.search_bar.text()

@@ -1,5 +1,11 @@
+import logging
+import threading
+
 import pika
 from retry import retry
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class RabbitMq:
@@ -9,57 +15,36 @@ class RabbitMq:
         'username': 'student',
         'password': 'student',
         'exchange': 'libraryapp.direct',
-        'routing_key': 'libraryapp.routingkey1',
-        'queue': 'libraryapp.queue'
+        'send_routing_key': 'libraryapp.routingkey1',
+        'send_queue': 'libraryapp.queue1',
+        'receive_routing_key': 'libraryapp.routingkey',
+        'receive_queue': 'libraryapp.queue',
     }
     credentials = pika.PlainCredentials(config['username'], config['password'])
-    parameters = (pika.ConnectionParameters(host=config['host']),
-                  pika.ConnectionParameters(port=config['port']),
-                  pika.ConnectionParameters(credentials=credentials))
+    parameters = pika.ConnectionParameters(host='localhost', port=5672, credentials=credentials)
 
-    def __init__(self, ui):
-        self.ui = ui
+    def __init__(self, signal):
+        self._signal = signal
 
-    def on_received_message(self, blocking_channel, deliver, properties,
-                            message):
-        result = message.decode('utf-8')
-        blocking_channel.confirm_delivery()
-        try:
-            self.ui.set_response(result)
-        except Exception as e:
-            print(e)
-        finally:
-            blocking_channel.stop_consuming()
+        self._write_connection = pika.SelectConnection(parameters=self.parameters,
+                                                       on_open_callback=self.on_write_open_connection)
+        self._channel = None
+        threading.Thread(target=self._write_connection.ioloop.start).start()
 
-    @retry(pika.exceptions.AMQPConnectionError, delay=5, jitter=(1, 3))
-    def receive_message(self):
-        # automatically close the connection
-        with pika.BlockingConnection(self.parameters) as connection:
-            # automatically close the channel
-            with connection.channel() as channel:
-                channel.basic_consume(self.config['queue'],
-                                      self.on_received_message)
-                try:
-                    channel.start_consuming()
-                # Don't recover connections closed by server
-                except pika.exceptions.ConnectionClosedByBroker:
-                    print("Connection closed by broker.")
-                # Don't recover on channel errors
-                except pika.exceptions.AMQPChannelError:
-                    print("AMQP Channel Error")
-                # Don't recover from KeyboardInterrupt
-                except KeyboardInterrupt:
-                    print("Application closed.")
+    def on_write_open_connection(self, _unused_connection):
+        logging.info("Opened write connection")
+        self._write_connection.channel(on_open_callback=self.on_write_channel_open)
+
+    def on_write_channel_open(self, channel):
+        logging.info('Write channel opened')
+        self._channel = channel
+        self._channel.basic_consume(self.config['receive_queue'], self.receive_message)
+
+    def receive_message(self, _unused_channel, basic_deliver, properties, body):
+        self._signal.emit(body.decode('utf-8'))
 
     def send_message(self, message):
         # automatically close the connection
-        with pika.BlockingConnection(self.parameters) as connection:
-            # automatically close the channel
-            with connection.channel() as channel:
-                self.clear_queue(channel)
-                channel.basic_publish(exchange=self.config['exchange'],
-                                      routing_key=self.config['routing_key'],
-                                      body=message)
-
-    def clear_queue(self, channel):
-        channel.queue_purge(self.config['queue'])
+        self._channel.basic_publish(exchange=self.config['exchange'],
+                                    routing_key=self.config['send_routing_key'],
+                                    body=message)
