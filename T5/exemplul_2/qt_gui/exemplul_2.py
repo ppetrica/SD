@@ -107,10 +107,8 @@ class LibraryApp(QWidget):
 
     def add_new_book(self):
         author, text, name, publisher = self._dialog.get_entries()
-        print(author)
-        print(text)
-        print(name)
-        print(publisher)
+
+        self.send_request(f'add:{author}&{text}&{name}&{publisher}')
 
 
 if __name__ == '__main__':
