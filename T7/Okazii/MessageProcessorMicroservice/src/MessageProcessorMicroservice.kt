@@ -14,7 +14,7 @@ class MessageProcessorMicroservice {
     private var auctioneerConnection:Socket
     private var receiveInQueueObservable: Observable<String>
     private val subscriptions = CompositeDisposable()
-    private val messageQueue: Queue<Message> = LinkedList<Message>()
+    private val messageQueue = mutableSetOf<Message>()
 
     companion object Constants {
         const val MESSAGE_PROCESSOR_PORT = 1600
@@ -63,19 +63,16 @@ class MessageProcessorMicroservice {
     private fun receiveAndProcessMessages() {
         // se primesc si se adauga in coada mesajele de la AuctioneerMicroservice
         val receiveInQueueSubscription = receiveInQueueObservable
-            ///TODO --- filtrati duplicatele folosind operatorul de filtrare
             .subscribeBy(
                 onNext = {
                     val message = Message.deserialize(it.toByteArray())
                     println(message)
+                    // Filtrare for free
                     messageQueue.add(message)
                 },
                 onComplete = {
                     // s-a incheiat primirea tuturor mesajelor
                     ///TODO --- se ordoneaza in functie de data si ora cand mesajele au fost primite
-
-                    // s-au primit toate mesajele de la AuctioneerMicroservice, i se trimite un mesaj pentru a semnala
-                    // acest lucru
                     val finishedMessagesMessage = Message.create(
                         "${auctioneerConnection.localAddress}:${auctioneerConnection.localPort}",
                         "am primit tot"
@@ -96,7 +93,8 @@ class MessageProcessorMicroservice {
             biddingProcessorSocket = Socket(BIDDING_PROCESSOR_HOST, BIDDING_PROCESSOR_PORT)
 
             println("Trimit urmatoarele mesaje:")
-            Observable.fromIterable(messageQueue).subscribeBy(
+            // sortare
+            Observable.fromIterable(messageQueue.sortedBy(Message::timestamp)).subscribeBy(
                 onNext = {
                     println(it.toString())
 
