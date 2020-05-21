@@ -91,5 +91,4 @@ class LibraryAppComponent {
             false
         }
     }
-
 }

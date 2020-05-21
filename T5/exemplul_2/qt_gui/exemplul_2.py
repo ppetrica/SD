@@ -1,16 +1,9 @@
 import os
 import sys
-from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog, QMessageBox, QDialog, QLineEdit
+from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog, QMessageBox, QDialog
 from PyQt5 import QtCore
 from PyQt5.uic import loadUi
 from mq_communication import RabbitMq
-
-
-def debug_trace(ui=None):
-    from pdb import set_trace
-    QtCore.pyqtRemoveInputHook()
-    set_trace()
-    # QtCore.pyqtRestoreInputHook()
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
