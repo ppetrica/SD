@@ -11,6 +11,7 @@ class BidderMicroservice(private val name: String, private val phoneNumber: Stri
     private var auctioneerSocket: Socket
     private var auctionResultObservable: Observable<String>
     private var myIdentity: String = "[BIDDER_NECONECTAT]"
+    private val logger = Logger("BidderMicroservice.log")
 
     companion object Constants {
         const val AUCTIONEER_HOST = "localhost"
@@ -22,7 +23,7 @@ class BidderMicroservice(private val name: String, private val phoneNumber: Stri
     init {
         try {
             auctioneerSocket = Socket(AUCTIONEER_HOST, AUCTIONEER_PORT)
-            println("M-am conectat la Auctioneer!")
+            logger.log("M-am conectat la Auctioneer!")
 
             myIdentity = "[${auctioneerSocket.localPort}:$name:$phoneNumber:$email]"
 
@@ -52,7 +53,7 @@ class BidderMicroservice(private val name: String, private val phoneNumber: Stri
                 auctioneerSocket.close()
             }
         } catch (e: Exception) {
-            println("$myIdentity Nu ma pot conecta la Auctioneer!")
+            logger.log("$myIdentity Nu ma pot conecta la Auctioneer!")
             exitProcess(1)
         }
     }
@@ -76,16 +77,16 @@ class BidderMicroservice(private val name: String, private val phoneNumber: Stri
     }
 
     private fun waitForResult() {
-        println("$myIdentity Astept rezultatul licitatiei...")
+        logger.log("$myIdentity Astept rezultatul licitatiei...")
         // bidder-ul se inscrie pentru primirea unui raspuns la oferta trimisa de acesta
         val auctionResultSubscription = auctionResultObservable.subscribeBy(
             // cand se primeste un mesaj in flux, inseamna ca a sosit rezultatul licitatiei
             onNext = {
                 val resultMessage: Message = Message.deserialize(it.toByteArray())
-                println("$myIdentity Rezultat licitatie: ${resultMessage.body}")
+                logger.log("$myIdentity Rezultat licitatie: ${resultMessage.body}")
             },
             onError = {
-                println("$myIdentity Eroare: $it")
+                logger.log("$myIdentity Eroare: $it")
             }
         )
 

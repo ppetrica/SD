@@ -5,7 +5,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.ServerSocket
 import java.net.Socket
-import java.util.*
 import kotlin.system.exitProcess
 
 class MessageProcessorMicroservice {
@@ -15,6 +14,7 @@ class MessageProcessorMicroservice {
     private var receiveInQueueObservable: Observable<String>
     private val subscriptions = CompositeDisposable()
     private val messageQueue = mutableSetOf<Message>()
+    private val logger = Logger("MessageProcessorMicroservice.log")
 
     companion object Constants {
         const val MESSAGE_PROCESSOR_PORT = 1600
@@ -24,8 +24,8 @@ class MessageProcessorMicroservice {
 
     init {
         messageProcessorSocket = ServerSocket(MESSAGE_PROCESSOR_PORT)
-        println("MessageProcessorMicroservice se executa pe portul: ${messageProcessorSocket.localPort}")
-        println("Se asteapta mesaje pentru procesare...")
+        logger.log("MessageProcessorMicroservice se executa pe portul: ${messageProcessorSocket.localPort}")
+        logger.log("Se asteapta mesaje pentru procesare...")
 
         // se asteapta mesaje primite de la AuctioneerMicroservice
         auctioneerConnection = messageProcessorSocket.accept()
@@ -66,7 +66,7 @@ class MessageProcessorMicroservice {
             .subscribeBy(
                 onNext = {
                     val message = Message.deserialize(it.toByteArray())
-                    println(message)
+                    logger.log(message.toString())
                     // Filtrare for free
                     messageQueue.add(message)
                 },
@@ -83,7 +83,7 @@ class MessageProcessorMicroservice {
                     // se trimit mai departe mesajele procesate catre BiddingProcessor
                     sendProcessedMessages()
                 },
-                onError = { println("Eroare: $it") }
+                onError = { logger.log("Eroare: $it") }
             )
         subscriptions.add(receiveInQueueSubscription)
     }
@@ -92,11 +92,11 @@ class MessageProcessorMicroservice {
         try {
             biddingProcessorSocket = Socket(BIDDING_PROCESSOR_HOST, BIDDING_PROCESSOR_PORT)
 
-            println("Trimit urmatoarele mesaje:")
+            logger.log("Trimit urmatoarele mesaje:")
             // sortare
             Observable.fromIterable(messageQueue.sortedBy(Message::timestamp)).subscribeBy(
                 onNext = {
-                    println(it.toString())
+                    logger.log(it.toString())
 
                     // trimitere mesaje catre procesorul licitatiei, care decide rezultatul final
                     biddingProcessorSocket.getOutputStream().write(it.serialize())
@@ -114,7 +114,7 @@ class MessageProcessorMicroservice {
                 }
             )
         } catch (e: Exception) {
-            println("Nu ma pot conecta la BiddingProcessor!")
+            logger.log("Nu ma pot conecta la BiddingProcessor!")
             messageProcessorSocket.close()
             exitProcess(1)
         }

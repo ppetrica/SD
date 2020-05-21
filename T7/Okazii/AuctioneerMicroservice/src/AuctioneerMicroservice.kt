@@ -18,6 +18,7 @@ class AuctioneerMicroservice {
     private val subscriptions = CompositeDisposable()
     private val bidQueue: Queue<Message> = LinkedList<Message>()
     private val bidderConnections: MutableList<Socket> = mutableListOf()
+    private val logger = Logger("AuctioneerMicroservice.log")
 
     companion object Constants {
         const val MESSAGE_PROCESSOR_HOST = "localhost"
@@ -29,8 +30,8 @@ class AuctioneerMicroservice {
     init {
         auctioneerSocket = ServerSocket(AUCTIONEER_PORT)
         auctioneerSocket.setSoTimeout(AUCTION_DURATION.toInt())
-        println("AuctioneerMicroservice se executa pe portul: ${auctioneerSocket.localPort}")
-        println("Se asteapta oferte de la bidderi...")
+        logger.log("AuctioneerMicroservice se executa pe portul: ${auctioneerSocket.localPort}")
+        logger.log("Se asteapta oferte de la bidderi...")
 
         // se creeaza obiectul Observable cu care se genereaza evenimente cand se primesc oferte de la bidderi
         receiveBidsObservable = Observable.create<String> { emitter ->
@@ -70,16 +71,16 @@ class AuctioneerMicroservice {
         val receiveBidsSubscription = receiveBidsObservable.subscribeBy(
             onNext = {
                 val message = Message.deserialize(it.toByteArray())
-                println(message)
+                logger.log(message.toString())
                 bidQueue.add(message)
             },
             onComplete = {
                 // licitatia s-a incheiat
                 // se trimit raspunsurile mai departe catre procesorul de mesaje
-                println("Licitatia s-a incheiat! Se trimit ofertele spre procesare...")
+                logger.log("Licitatia s-a incheiat! Se trimit ofertele spre procesare...")
                 forwardBids()
             },
-            onError = { println("Eroare: $it") }
+            onError = { logger.log("Eroare: $it") }
         )
         subscriptions.add(receiveBidsSubscription)
     }
@@ -91,10 +92,10 @@ class AuctioneerMicroservice {
                 onNext = {
                     // trimitere mesaje catre procesorul de mesaje
                     messageProcessorSocket.getOutputStream().write(it.serialize())
-                    println("Am trimis mesajul: $it")
+                    logger.log("Am trimis mesajul: $it")
                 },
                 onComplete = {
-                    println("Am trimis toate ofertele catre MessageProcessor.")
+                    logger.log("Am trimis toate ofertele catre MessageProcessor.")
                     val bidEndMessage = Message.create(
                         "${messageProcessorSocket.localAddress}:${messageProcessorSocket.localPort}",
                         "final"
@@ -112,7 +113,7 @@ class AuctioneerMicroservice {
                 }
             ))
         } catch (e: Exception) {
-            println("Nu ma pot conecta la MessageProcessor!")
+            logger.log("Nu ma pot conecta la MessageProcessor!")
             auctioneerSocket.close()
             exitProcess(1)
         }
@@ -129,7 +130,7 @@ class AuctioneerMicroservice {
 
             val result: Message = Message.deserialize(receivedMessage.toByteArray())
             val winningPrice = result.body.split(" ")[1].toInt()
-            println("Am primit rezultatul licitatiei de la BiddingProcessor: ${result.sender} a castigat cu pretul: $winningPrice")
+            logger.log("Am primit rezultatul licitatiei de la BiddingProcessor: ${result.sender} a castigat cu pretul: $winningPrice")
 
             // se creeaza mesajele pentru rezultatele licitatiei
             val winningMessage = Message.create(auctioneerSocket.localSocketAddress.toString(),
@@ -148,7 +149,7 @@ class AuctioneerMicroservice {
                 it.close()
             }
         } catch (e: Exception) {
-            println("Nu ma pot conecta la BiddingProcessor!")
+            logger.log("Nu ma pot conecta la BiddingProcessor!")
             auctioneerSocket.close()
             exitProcess(1)
         }

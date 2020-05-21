@@ -10,5 +10,6 @@
     <orderEntry type="library" name="KotlinJavaRuntime (4)" level="project" />
     <orderEntry type="library" name="io.reactivex.rxjava3:rxkotlin:3.0.0" level="project" />
     <orderEntry type="library" name="MessageLibrary" level="project" />
+    <orderEntry type="library" name="Logging" level="project" />
   </component>
 </module>
