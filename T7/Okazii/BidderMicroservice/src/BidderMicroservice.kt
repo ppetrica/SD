@@ -7,7 +7,7 @@ import kotlin.Exception
 import kotlin.random.Random
 import kotlin.system.exitProcess
 
-class BidderMicroservice {
+class BidderMicroservice(private val name: String, private val phoneNumber: String, private val email: String) {
     private var auctioneerSocket: Socket
     private var auctionResultObservable: Observable<String>
     private var myIdentity: String = "[BIDDER_NECONECTAT]"
@@ -24,7 +24,7 @@ class BidderMicroservice {
             auctioneerSocket = Socket(AUCTIONEER_HOST, AUCTIONEER_PORT)
             println("M-am conectat la Auctioneer!")
 
-            myIdentity = "[${auctioneerSocket.localPort}]"
+            myIdentity = "[${auctioneerSocket.localPort}:$name:$phoneNumber:$email]"
 
             // se creeaza un obiect Observable ce va emite mesaje primite printr-un TCP
             // fiecare mesaj primit reprezinta un element al fluxului de date reactiv
@@ -62,7 +62,7 @@ class BidderMicroservice {
         val pret = Random.nextInt(MIN_BID, MAX_BID)
 
         // se creeaza mesajul care incapsuleaza oferta
-        val biddingMessage = Message.create("${auctioneerSocket.localAddress}:${auctioneerSocket.localPort}",
+        val biddingMessage = Message.create("$name:$phoneNumber:$email:${auctioneerSocket.localAddress}:${auctioneerSocket.localPort}",
             "licitez $pret")
 
         // bidder-ul trimite pretul pentru care doreste sa liciteze
@@ -100,6 +100,11 @@ class BidderMicroservice {
 }
 
 fun main(args: Array<String>) {
-    val bidderMicroservice = BidderMicroservice()
+    val name = if (args.size > 1) args[1] else "Oleg";
+    val phoneNumber = if (args.size > 2) args[2] else "032423523";
+    val email = if (args.size > 3) args[3] else "oleg@olegovici.com";
+
+    val bidderMicroservice = BidderMicroservice(name, phoneNumber, email)
+
     bidderMicroservice.run()
 }

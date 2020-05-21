@@ -139,7 +139,8 @@ class AuctioneerMicroservice {
 
             // se anunta castigatorul
             bidderConnections.forEach {
-                if (it.remoteSocketAddress.toString() == result.sender) {
+                val split = result.sender.split(':');
+                if (it.remoteSocketAddress.toString() == split[3] + ':' + split[4]) {
                     it.getOutputStream().write(winningMessage.serialize())
                 } else {
                     it.getOutputStream().write(losingMessage.serialize())
