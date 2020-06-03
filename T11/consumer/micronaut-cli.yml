@@ -1,0 +1,5 @@
+profile: function-aws
+defaultPackage: com.sd.laborator
+---
+testFramework: kotlintest
+sourceLanguage: kotlin
