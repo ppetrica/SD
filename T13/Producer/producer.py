@@ -16,7 +16,7 @@ class Producer(threading.Thread):
         mouse = Controller()
 
         for i in range(100):
-            message = '{}'.format(mouse.position)
+            message = '{} {}'.format(mouse.position[0], mouse.position[1])
             # thread-ul producator trimite mesaje catre un topic
             producer.send(topic=self.topic, value=bytearray(message, encoding="utf-8"))
 
